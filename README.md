@@ -1,2 +1,2 @@
 # phpageparser
-Simple Regex Page Parser in PHPH
+Simple Regex Page Parser in PHP

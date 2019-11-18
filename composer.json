@@ -1,0 +1,16 @@
+{
+    "name": "pforret/phpageparser",
+    "description": "Simple Regex HTML Page Parser in PHP",
+    "type": "library",
+    "license": "Apache",
+    "authors": [
+        {
+            "name": "Peter Forret",
+            "email": "peter@forret.com"
+        }
+    ],
+	"require": {},
+	"suggest": {
+		"monolog/monolog": "Allows more advanced logging of the application flow"
+	}
+}
