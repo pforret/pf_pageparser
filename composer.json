@@ -1,16 +1,45 @@
 {
-    "name": "pforret/phpageparser",
-    "description": "Simple Regex HTML Page Parser in PHP",
+    "name": "pforret/pf_pageparser",
+    "description": "Simple Regex Page Parser in PHP",
+    "keywords": [
+        "pforret",
+        "pf_pageparser"
+    ],
+    "homepage": "https://github.com/pforret/pf_pageparser",
+    "license": "MIT",
     "type": "library",
-    "license": "Apache",
     "authors": [
         {
             "name": "Peter Forret",
-            "email": "peter@forret.com"
+            "email": "peter@forret.com",
+            "role": "Developer"
         }
     ],
-	"require": {},
-	"suggest": {
-		"monolog/monolog": "Allows more advanced logging of the application flow"
-	}
+    "require": {
+        "php": "^7.1",
+        "doctrine/cache": "^1.10",
+        "guzzlehttp/guzzle": "^6.5",
+        "kevinrob/guzzle-cache-middleware": "^3.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pforret\\PfPageparser\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Pforret\\PfPageparser\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+
+    },
+    "config": {
+        "sort-packages": true
+    }
 }
