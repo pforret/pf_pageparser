@@ -1,4 +1,4 @@
-# Very short description of the package
+# pf_pageparser
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/pforret/pf_pageparser.svg?style=flat-square)](https://packagist.org/packages/pforret/pf_pageparser)
 [![Build Status](https://img.shields.io/travis/pforret/pf_pageparser/master.svg?style=flat-square)](https://travis-ci.org/pforret/pf_pageparser)
