@@ -7,12 +7,11 @@ class PfPageparser
 {
     // Build your next great package.
     private $config;
-    private $logger;
-    private $content;
-    private $chunks;
-    private $results;
+    private $content="";
+    private $chunks=[];
+    private $parsed=[];
 
-    public function __construct($config=[],$logger=false){
+    public function __construct($config=[]){
         $defaults=[
             'userAgent' =>  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
             'cacheTtl'  =>  3600,
@@ -20,23 +19,12 @@ class PfPageparser
         ];
 
         $this->config=array_merge($defaults,$config);
-        $this->content="";
-        $this->chunks=[];
-        $this->results=[];
-        if($logger){
-            $this->logger=$logger;
-        }
     }
 
     public function get_config(){
         return $this->config;
     }
 
-    /**
-     * @param $url
-     * @param array $options
-     * @return PfPageparser
-     */
     public function load_from_url(string $url,array $options=[]): PfPageparser
     {
         // TODO: load with guzzle & caching
@@ -55,11 +43,8 @@ class PfPageparser
         return $this;
     }
 
-    /**
-     * @param $filename
-     * @return PfPageparser
-     */
-    public function load_from_file(string $filename){
+    public function load_from_file(string $filename): PfPageparser
+    {
         // load directly from file
 
         if(file_exists($filename)){
@@ -68,20 +53,18 @@ class PfPageparser
         return $this;
     }
 
-    /**
-     * @param $string
-     * @return PfPageparser
-     */
-    public function load_fom_string(string $string){
+    public function load_fom_string(string $string): PfPageparser
+    {
         // load HTML string
         $this->content=$string;
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function get_content(){
+        return $this->content;
+    }
+
+    public function raw(){
         return $this->content;
     }
 
@@ -90,7 +73,8 @@ class PfPageparser
      * @param bool $is_regex
      * @return $this
      */
-    public function trim_before($pattern,$is_regex=false){
+    public function trim_before($pattern,$is_regex=false): PfPageparser
+    {
         if($is_regex){
             $matches=[];
             if($found=preg_match($pattern,$this->content,$matches)){
@@ -109,7 +93,8 @@ class PfPageparser
      * @param bool $is_regex
      * @return $this
      */
-    public function trim_after($pattern,$is_regex=false){
+    public function trim_after($pattern,$is_regex=false): PfPageparser
+    {
         if($is_regex){
             $matches=[];
             if($found=preg_match($pattern,$this->content,$matches)){
@@ -131,7 +116,8 @@ class PfPageparser
      * @return $this
      */
 
-    public function trim($before="<body",$after="</body",$is_regex=false){
+    public function trim($before="<body",$after="</body",$is_regex=false): PfPageparser
+    {
         $this->trim_before($before,$is_regex);
         $this->trim_after($after,$is_regex);
         return $this;
@@ -144,7 +130,8 @@ class PfPageparser
      * split the HTML content into chunks based on a text or regex separator
      */
 
-    public function split_chunks($pattern,$is_regex=false){
+    public function split_chunks($pattern,$is_regex=false): PfPageparser
+    {
         if(!$is_regex){
             $this->chunks=explode($pattern,$this->content);
         } else {
@@ -166,24 +153,18 @@ class PfPageparser
     }
 
     /**
-     * @return array
-     */
-    public function get_chunks(){
-        return $this->chunks;
-    }
-
-    /**
-     * @param bool $pattern_keep   - array of patterns that should be found (combined with OR)
-     * @param bool $pattern_remove - array of patterns that should not be found (combined with OR)
+     * @param array $pattern_keep   - array of patterns that should be found (combined with OR)
+     * @param array $pattern_remove - array of patterns that should not be found (combined with OR)
      * @param bool $is_regex       - whether patterns are regex or just strings
      * @return $this
      */
-    public function filter_chunks($pattern_keep=false,$pattern_remove=false,$is_regex=false){
+    public function filter_chunks($pattern_keep=[],$pattern_remove=[],bool $is_regex=false): PfPageparser
+    {
         $id=false;
         $matches=false;
         $chunk=false;
 
-        if(!$this->chunks){
+        if(empty($this->chunks)){
             // not split in chunks yet
             // do nothing
             return $this;
@@ -199,7 +180,7 @@ class PfPageparser
         foreach($this->chunks as $id => $chunk){
             //
             $keep_chunk=true;
-            if($pattern_keep){
+            if(!empty($pattern_keep)){
                 $pattern_found=false;
                 foreach($pattern_keep as $pattern){
                     if($is_regex){
@@ -210,7 +191,7 @@ class PfPageparser
                 }
                 $keep_chunk=($keep_chunk AND $pattern_found);
             }
-            if($pattern_remove){
+            if(!empty($pattern_remove)){
                 $pattern_found=false;
                 foreach($pattern_remove as $pattern){
                     if($is_regex){
@@ -232,23 +213,46 @@ class PfPageparser
      * @param $pattern
      * @return array
      */
-    public function parse_fom_chunks($pattern){
-        if(!$this->chunks){
+    public function parse_fom_chunks(string $pattern,bool $restart=false): array
+    {
+        if(empty($this->chunks)){
             return $this;
         }
-        $results=[];
-        foreach($this->chunks as $chunk){
+        if($restart or empty($this->parsed)){
+            $items=&$this->chunks;
+        } else {
+            $items=&$this->parsed;
+        }
+        foreach($items as $item){
             $matches=[];
-            if(preg_match_all($pattern,$chunk,$matches,PREG_SET_ORDER)){
+            if(preg_match_all($pattern,$item,$matches,PREG_SET_ORDER)){
                 $chunk_results=[];
                 foreach($matches as $match){
                     $chunk_results[]=$match[1];
                 }
-                $results[]=$chunk_results;
+                $this->parsed[]=$chunk_results;
             }
         }
-        return $results;
+        return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function get_chunks(): array
+    {
+        return $this->chunks;
+    }
+
+    public function results(bool $before_parsing=false): array
+    {
+        if($before_parsing or empty($this->parsed)){
+            return $this->chunks;
+        } else {
+            return $this->parsed;
+        }
+    }
+
 
     public function preg_get($pattern,$haystack){
         $matches=[];
@@ -263,13 +267,4 @@ class PfPageparser
      * PROTECTED FUNCTIONS
      */
 
-    /**
-     * @param $text
-     * @param string $type
-     * @return bool
-     */
-    protected function log($text,$type="LOG"){
-        if(!$this->logger)  return false;
-        return true;
-    }
 }
