@@ -6,16 +6,17 @@ namespace Pforret\PfPageparser;
 class PfPageparser
 {
     // Build your next great package.
-    protected $config;
-    protected $logger;
-    protected $content;
-    protected $chunks;
-    protected $results;
+    private $config;
+    private $logger;
+    private $content;
+    private $chunks;
+    private $results;
 
     public function __construct($config=[],$logger=false){
         $defaults=[
-            "UserAgent" => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36",
-            "CacheTime" =>  3600,
+            'userAgent' =>  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+            'cacheTtl'  =>  3600,
+            'timeOut'   =>  10,
         ];
 
         $this->config=array_merge($defaults,$config);
@@ -33,11 +34,24 @@ class PfPageparser
 
     /**
      * @param $url
+     * @param array $options
      * @return PfPageparser
      */
-    public function load_from_url($url){
-        // load with guzzle & caching
-        $this->content=file_get_contents($url);
+    public function load_from_url(string $url,array $options=[]): PfPageparser
+    {
+        // TODO: load with guzzle & caching
+        $options=array_merge($this->config,$options);
+
+        $ch = curl_init();
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt ($ch, CURLOPT_USERAGENT, $options['userAgent']);
+        curl_setopt ($ch, CURLOPT_HEADER, 0);
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt ($ch, CURLOPT_TIMEOUT,$options['timeOut']);
+        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT,$options['timeOut']);
+        $this->content = curl_exec ($ch);
+        curl_close ($ch);
         return $this;
     }
 
@@ -45,9 +59,12 @@ class PfPageparser
      * @param $filename
      * @return PfPageparser
      */
-    public function load_from_file($filename){
+    public function load_from_file(string $filename){
         // load directly from file
-        $this->content=file_get_contents($filename);
+
+        if(file_exists($filename)){
+            $this->content=file_get_contents($filename);
+        }
         return $this;
     }
 
@@ -55,7 +72,7 @@ class PfPageparser
      * @param $string
      * @return PfPageparser
      */
-    public function load_fom_string($string){
+    public function load_fom_string(string $string){
         // load HTML string
         $this->content=$string;
         return $this;

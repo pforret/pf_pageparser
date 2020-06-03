@@ -15,8 +15,8 @@ class PageparserTest extends TestCase
     public function test_config(){
         $pp=New PfPageparser(["TestValue" => 1]);
         $cf=$pp->get_config();
-        $this->assertArrayHasKey("CacheTime",$cf,"CacheTime should exist");
-        $this->assertEquals(3600,$cf["CacheTime"],"CacheTime should have default value 3600");
+        $this->assertArrayHasKey("cacheTtl",$cf,"CacheTime should exist");
+        $this->assertEquals(3600,$cf["cacheTtl"],"CacheTime should have default value 3600");
         $this->assertEquals(1,$cf["TestValue"],"TestValue should have value 1");
     }
 

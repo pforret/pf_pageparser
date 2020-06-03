@@ -1,8 +1,12 @@
 {
     "name": "pforret/pf_pageparser",
     "description": "Simple Regex Page Parser in PHP",
+    "version": "1.0.0",
     "keywords": [
         "pforret",
+        "parser",
+        "html",
+        "web",
         "pf_pageparser"
     ],
     "homepage": "https://github.com/pforret/pf_pageparser",
@@ -16,10 +20,8 @@
         }
     ],
     "require": {
-        "php": "^7.1",
-        "doctrine/cache": "^1.10",
-        "guzzlehttp/guzzle": "^6.5",
-        "kevinrob/guzzle-cache-middleware": "^3.2"
+        "php": "^7.2",
+        "ext-curl": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.0"
