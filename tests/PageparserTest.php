@@ -38,7 +38,8 @@ class PageparserTest extends TestCase
             ->trim("<body","</body")
             ->split_chunks("</tr>")
             ->filter_chunks("$")
-            ->parse_fom_chunks("|<td>(.*)</td>|");
+            ->parse_fom_chunks("|<td>(.*)</td>|")
+            ->results();
         $this->assertEquals(count($results),3);
         $this->assertEquals($results[2][0],"20$");
 

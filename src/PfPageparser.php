@@ -25,6 +25,10 @@ class PfPageparser
         return $this->config;
     }
 
+    /* ------------------------------------------
+     * LOADING THE CONTENT FROM A URL/FILE/STRING
+     */
+
     public function load_from_url(string $url,array $options=[]): PfPageparser
     {
         // TODO: load with guzzle & caching
@@ -60,68 +64,56 @@ class PfPageparser
         return $this;
     }
 
-    public function get_content(){
-        return $this->content;
-    }
+    /* ------------------------------------------
+    * GET RAW CONTENT BACK
+    */
 
-    public function raw(){
-        return $this->content;
+    /**
+     * @return string
+     */
+    public function get_content():string
+    {
+        // for backward compatibility
+        return $this->raw();
     }
 
     /**
-     * @param $pattern
-     * @param bool $is_regex
-     * @return $this
+     * @return string
      */
-    public function trim_before($pattern,$is_regex=false): PfPageparser
+    public function raw(): string
     {
-        if($is_regex){
-            $matches=[];
-            if($found=preg_match($pattern,$this->content,$matches)){
-                $this->content=substr($this->content,$found); // trim before
-            }
-        } else {
-            if($found=strpos($this->content,$pattern)){
-                $this->content=substr($this->content,$found); // trim before
-            }
-        }
+        return $this->content;
+    }
+
+    /* ------------------------------------------
+    * MODIFY THE RAW CONTENT
+    */
+
+    public function trim_before(string $pattern,bool $is_regex=false): PfPageparser
+    {
+        $found = $is_regex ? preg_match($pattern, $this->content, $matches) : strpos($this->content, $pattern);
+        if($found) $this->content = substr($this->content, $found);
         return $this;
     }
 
-    /**
-     * @param $pattern
-     * @param bool $is_regex
-     * @return $this
-     */
-    public function trim_after($pattern,$is_regex=false): PfPageparser
+    public function trim_after(string $pattern,bool $is_regex=false): PfPageparser
     {
-        if($is_regex){
-            $matches=[];
-            if($found=preg_match($pattern,$this->content,$matches)){
-                $this->content=substr($this->content,0,$found); // trim after
-            }
-        } else {
-            if($found=strpos($this->content,$pattern)){
-                $this->content=substr($this->content,0,$found + strlen($pattern)); // trim after
-            }
-        }
+        $found = $is_regex ? preg_match($pattern, $this->content, $matches) : strpos($this->content, $pattern);
+        if($found) $this->content=substr($this->content,0,$found);
         return $this;
 
     }
 
-    /**
-     * @param string $before
-     * @param string $after
-     * @param bool $is_regex
-     * @return $this
-     */
-
-    public function trim($before="<body",$after="</body",$is_regex=false): PfPageparser
+    public function trim(string $before="<body",string $after="</body",bool $is_regex=false): PfPageparser
     {
         $this->trim_before($before,$is_regex);
         $this->trim_after($after,$is_regex);
         return $this;
     }
+
+    /* ------------------------------------------
+    * RAW CONTENT => CHUNKS
+    */
 
     /**
      * @param $pattern
@@ -130,7 +122,7 @@ class PfPageparser
      * split the HTML content into chunks based on a text or regex separator
      */
 
-    public function split_chunks($pattern,$is_regex=false): PfPageparser
+    public function split_chunks(string $pattern,bool $is_regex=false): PfPageparser
     {
         if(!$is_regex){
             $this->chunks=explode($pattern,$this->content);
@@ -213,7 +205,7 @@ class PfPageparser
      * @param $pattern
      * @return array
      */
-    public function parse_fom_chunks(string $pattern,bool $restart=false): array
+    public function parse_fom_chunks(string $pattern,bool $restart=false): PfPageparser
     {
         if(empty($this->chunks)){
             return $this;

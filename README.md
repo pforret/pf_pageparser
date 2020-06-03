@@ -8,6 +8,7 @@
 This is a HTML parser I've written because I scrape a lot of web sites to look for structured, repetitive data. 
 This parser allows me to easily cleanup HTML, split it into chunks and find the right data in each chunk
 It does not use a DOM parser, so it also works on partial or invalid HTML
+
 ## Installation
 
 You can install the package via composer:
@@ -24,6 +25,9 @@ $pp->load_from_url("http://www.example.com/products")
     ->trim("<table","</table>")
     ->split_chunks('</tr>')
     ->filter_chunks('product_id')
+    ->parse_from_chunks('||',true);
+
+$results=$pp->results();
 ```
 
 ### Testing
