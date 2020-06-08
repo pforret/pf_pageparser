@@ -20,28 +20,50 @@ class PageparserTest extends TestCase
         $this->assertEquals(1,$cf["TestValue"],"TestValue should have value 1");
     }
 
-    public function test_input1(){
+    public function test_input_from_file(){
         $pp=New PfPageparser();
         $pp->load_from_file("tests/content/input1.html")
             ->trim("<body","</body")
             ->split_chunks("</tr>")
-            ->filter_chunks("$");
+            ->filter_chunks(["$"]);
         $this->assertEquals(count($pp->get_chunks()),3);
 
         $pp->load_from_file("tests/content/input1.html")
             ->trim("<body","</body")
             ->split_chunks("</tr>",true)
-            ->filter_chunks("$");
+            ->filter_chunks(["$"]);
         $this->assertEquals(count($pp->get_chunks()),3);
 
         $results=$pp->load_from_file("tests/content/input1.html")
             ->trim("<body","</body")
             ->split_chunks("</tr>")
-            ->filter_chunks("$")
+            ->filter_chunks(["$"])
             ->parse_fom_chunks("|<td>(.*)</td>|")
             ->results();
         $this->assertEquals(count($results),3);
         $this->assertEquals($results[2][0],"20$");
+
+    }
+
+    public function test_from_url(){
+        $pp=New PfPageparser();
+        $pp->load_from_url("https://www.wikipedia.org/")
+            ->trim('<div class="other-projects">','<p class="site-license">');
+        $this->assertNotEmpty($pp->get_content(),'HTML retrieved and trimmed');
+
+        $pp->load_from_url("https://www.wikipedia.org/")
+            ->trim('<div class="other-projects">','<p class="site-license">')
+            ->split_chunks('<div class="other-project">')
+            ->filter_chunks(['other-project-title']);
+        $this->assertTrue(count($pp->get_chunks()) > 0,'HTML split and filtered');
+
+        $pp->load_from_url("https://www.wikipedia.org/")
+            ->trim('<div class="other-projects">','<p class="site-license">')
+            ->split_chunks('<div class="other-project">')
+            ->filter_chunks(['other-project-title'])
+            ->parse_fom_chunks('|<span class="other-project-title jsl10n" data-jsl10n=".*">([\w\s]*)</span>|',true);
+        $this->assertTrue(count($pp->results()) > 0,'HTML split and filtered');
+        $this->assertTrue(in_array('Wiktionary',$pp->results()),'Parsed from chunks');
 
     }
 }

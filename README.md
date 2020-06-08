@@ -20,14 +20,15 @@ composer require pforret/pf_pageparser
 ## Usage
 
 ``` php
-$pp=New PfPageparser(["CacheTime" => 300]);
+$pp=New PfPageparser(["cacheTtl" => 300]);
+
 $pp->load_from_url("http://www.example.com/products")
     ->trim("<table","</table>")
     ->split_chunks('</tr>')
     ->filter_chunks('product_id')
-    ->parse_from_chunks('||',true);
+    ->parse_from_chunks('|Price: [\d\.]*|',true);
 
-$results=$pp->results();
+$prices=$pp->results();
 ```
 
 ### Testing

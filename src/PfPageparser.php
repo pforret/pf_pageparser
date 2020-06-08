@@ -2,6 +2,10 @@
 
 namespace Pforret\PfPageparser;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use Psr\Log;
+use Psr\Log\AbstractLogger;
 
 class PfPageparser
 {
@@ -10,14 +14,19 @@ class PfPageparser
     private $content="";
     private $chunks=[];
     private $parsed=[];
+    private $logger=null;
 
-    public function __construct($config=[]){
+    public function __construct(array $config=[], AbstractLogger $logger=null){
         $defaults=[
             'userAgent' =>  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
             'cacheTtl'  =>  3600,
             'timeOut'   =>  10,
+            'method'    =>  'GET',
         ];
 
+        if($logger){
+            $this->logger=$logger;
+        }
         $this->config=array_merge($defaults,$config);
     }
 
@@ -31,19 +40,16 @@ class PfPageparser
 
     public function load_from_url(string $url,array $options=[]): PfPageparser
     {
-        // TODO: load with guzzle & caching
+        // TODO: load with caching
         $options=array_merge($this->config,$options);
+        $client = new Client();
+        try {
+            $res = $client->request($options['method'], $url);
+        } catch (GuzzleException $e) {
+            $this->log();
+        }
+        $this->content=$res->getBody();
 
-        $ch = curl_init();
-        curl_setopt ($ch, CURLOPT_URL, $url);
-        curl_setopt ($ch, CURLOPT_USERAGENT, $options['userAgent']);
-        curl_setopt ($ch, CURLOPT_HEADER, 0);
-        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt ($ch, CURLOPT_FOLLOWLOCATION, 1);
-        curl_setopt ($ch, CURLOPT_TIMEOUT,$options['timeOut']);
-        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT,$options['timeOut']);
-        $this->content = curl_exec ($ch);
-        curl_close ($ch);
         return $this;
     }
 
@@ -145,12 +151,12 @@ class PfPageparser
     }
 
     /**
-     * @param array $pattern_keep   - array of patterns that should be found (combined with OR)
-     * @param array $pattern_remove - array of patterns that should not be found (combined with OR)
-     * @param bool $is_regex       - whether patterns are regex or just strings
+     * @param array $pattern_keep
+     * @param array $pattern_remove
+     * @param bool $is_regex
      * @return $this
      */
-    public function filter_chunks($pattern_keep=[],$pattern_remove=[],bool $is_regex=false): PfPageparser
+    public function filter_chunks(array $pattern_keep=[], array $pattern_remove=[], bool $is_regex=false): PfPageparser
     {
         $id=false;
         $matches=false;
@@ -160,14 +166,6 @@ class PfPageparser
             // not split in chunks yet
             // do nothing
             return $this;
-        }
-        if($pattern_keep AND !is_array($pattern_keep)){
-            // make it always an array
-            $pattern_keep=[$pattern_keep];
-        }
-        if($pattern_remove AND !is_array($pattern_remove)){
-            // make it always an array
-            $pattern_remove=[$pattern_remove];
         }
         foreach($this->chunks as $id => $chunk){
             //
@@ -202,10 +200,11 @@ class PfPageparser
     }
 
     /**
-     * @param $pattern
-     * @return array
+     * @param string $pattern
+     * @param bool $restart
+     * @return PfPageparser
      */
-    public function parse_fom_chunks(string $pattern,bool $restart=false): PfPageparser
+    public function parse_fom_chunks(string $pattern,bool $only_one=false, bool $restart=false): PfPageparser
     {
         if(empty($this->chunks)){
             return $this;
@@ -220,7 +219,11 @@ class PfPageparser
             if(preg_match_all($pattern,$item,$matches,PREG_SET_ORDER)){
                 $chunk_results=[];
                 foreach($matches as $match){
-                    $chunk_results[]=$match[1];
+                    if($only_one){
+                        $chunk_results=$match[1];
+                    } else {
+                        $chunk_results[]=$match[1];
+                    }
                 }
                 $this->parsed[]=$chunk_results;
             }
@@ -228,9 +231,6 @@ class PfPageparser
         return $this;
     }
 
-    /**
-     * @return array
-     */
     public function get_chunks(): array
     {
         return $this->chunks;
@@ -245,18 +245,11 @@ class PfPageparser
         }
     }
 
-
-    public function preg_get($pattern,$haystack){
-        $matches=[];
-        if(preg_match($pattern,$haystack,$matches)){
-            return $matches[0];
-        } else {
-            return "";
+    private function log(string $text,int $level )
+    {
+        if($this->logger){
+            $this->logger->log($level,$text);
         }
     }
-
-    /**
-     * PROTECTED FUNCTIONS
-     */
 
 }
