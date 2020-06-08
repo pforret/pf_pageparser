@@ -19,6 +19,13 @@ class PageparserTest extends TestCase
         $this->assertEquals(3600,$cf["cacheTtl"],"CacheTime should have default value 3600");
         $this->assertEquals(1,$cf["TestValue"],"TestValue should have value 1");
     }
+    public function test_input_from_string(){
+        $pp=New PfPageparser();
+        $pp->load_fom_string('one,two,three')
+            ->split_chunks(',');
+        $this->assertEquals(count($pp->get_chunks()),3);
+
+    }
 
     public function test_input_from_file(){
         $pp=New PfPageparser();

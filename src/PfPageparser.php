@@ -4,8 +4,7 @@ namespace Pforret\PfPageparser;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use Psr\Log;
-use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 
 class PfPageparser
 {
@@ -16,7 +15,7 @@ class PfPageparser
     private $parsed=[];
     private $logger=null;
 
-    public function __construct(array $config=[], AbstractLogger $logger=null){
+    public function __construct(array $config=[], LoggerInterface $logger=null){
         $defaults=[
             'userAgent' =>  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
             'cacheTtl'  =>  3600,
@@ -38,25 +37,30 @@ class PfPageparser
      * LOADING THE CONTENT FROM A URL/FILE/STRING
      */
 
-    public function load_from_url(string $url,array $options=[]): PfPageparser
+    /**
+     * @param string $url
+     * @param array $options
+     * @return $this
+     */
+    public function load_from_url(string $url, array $options=[]): PfPageparser
     {
         // TODO: load with caching
         $options=array_merge($this->config,$options);
         $client = new Client();
         try {
             $res = $client->request($options['method'], $url);
-        } catch (GuzzleException $e) {
-            $this->log();
+            $this->content=$res->getBody()->getContents();
+        } catch (GuzzleException $error) {
+            $response = $error->getResponse();
+            $response_info = $response->getBody()->getContents();
+            $message = 'API connection error: ' . print_r(json_decode($response_info), TRUE);
+            $this->log($message,'error');
         }
-        $this->content=$res->getBody();
-
         return $this;
     }
 
     public function load_from_file(string $filename): PfPageparser
     {
-        // load directly from file
-
         if(file_exists($filename)){
             $this->content=file_get_contents($filename);
         }
@@ -65,7 +69,6 @@ class PfPageparser
 
     public function load_fom_string(string $string): PfPageparser
     {
-        // load HTML string
         $this->content=$string;
         return $this;
     }
@@ -158,13 +161,9 @@ class PfPageparser
      */
     public function filter_chunks(array $pattern_keep=[], array $pattern_remove=[], bool $is_regex=false): PfPageparser
     {
-        $id=false;
         $matches=false;
-        $chunk=false;
 
         if(empty($this->chunks)){
-            // not split in chunks yet
-            // do nothing
             return $this;
         }
         foreach($this->chunks as $id => $chunk){
@@ -201,6 +200,7 @@ class PfPageparser
 
     /**
      * @param string $pattern
+     * @param bool $only_one
      * @param bool $restart
      * @return PfPageparser
      */
@@ -245,7 +245,7 @@ class PfPageparser
         }
     }
 
-    private function log(string $text,int $level )
+    private function log(string $text,string $level = 'info')
     {
         if($this->logger){
             $this->logger->log($level,$text);
