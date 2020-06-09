@@ -1,7 +1,6 @@
 {
     "name": "pforret/pf_pageparser",
     "description": "Simple Regex Page Parser in PHP",
-    "version": "1.1.1",
     "keywords": [
         "pforret",
         "parser",
