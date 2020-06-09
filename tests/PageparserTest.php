@@ -24,7 +24,6 @@ class PageparserTest extends TestCase
         $pp->load_fom_string('one,two,three')
             ->split_chunks(',');
         $this->assertEquals(count($pp->get_chunks()),3);
-
     }
 
     public function test_input_from_file(){
@@ -72,5 +71,13 @@ class PageparserTest extends TestCase
         $this->assertTrue(count($pp->results()) > 0,'HTML split and filtered');
         $this->assertTrue(in_array('Wiktionary',$pp->results()),'Parsed from chunks');
 
+    }
+
+    public function test_no_resolve(){
+        $pp=New PfPageparser();
+        $pp->load_from_url("https://non_existant.wikipedia.org/");
+        $this->assertEmpty($pp->get_content(),'HTML retrieved and trimmed');
+        $pp->load_from_url("not_http://www.wikipedia.org/");
+        $this->assertEmpty($pp->get_content(),'HTML retrieved and trimmed');
     }
 }

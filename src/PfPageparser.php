@@ -19,8 +19,11 @@ class PfPageparser
         $defaults=[
             'userAgent' =>  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
             'cacheTtl'  =>  3600,
-            'timeOut'   =>  10,
+            'timeout'   =>  5,      // Guzzle timeout
             'method'    =>  'GET',
+            'headers'   => [
+                'User-Agent'  => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+            ]
         ];
 
         if($logger){
@@ -46,14 +49,14 @@ class PfPageparser
     {
         // TODO: load with caching
         $options=array_merge($this->config,$options);
-        $client = new Client();
+        $client = new Client([
+            'headers'   =>  $options['headers'],
+        ]);
         try {
             $res = $client->request($options['method'], $url);
             $this->content=$res->getBody()->getContents();
         } catch (GuzzleException $error) {
-            $response = $error->getResponse();
-            $response_info = $response->getBody()->getContents();
-            $message = 'API connection error: ' . print_r(json_decode($response_info), TRUE);
+            $message = $error->getMessage();
             $this->log($message,'error');
         }
         return $this;

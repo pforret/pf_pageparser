@@ -2,7 +2,15 @@
 
 All notable changes to `pf_pageparser` will be documented in this file
 
-## 1.0.1 - 2020-0§-03
+## 1.1.1 - 2020-06-08
+
+- better GuzzleException handling
+
+## 1.1.0 - 2020-06-08
+
+- parsing inside chunks
+
+## 1.0.1 - 2020-06-03
 
 - better URL retrieve (using cURL)
 
