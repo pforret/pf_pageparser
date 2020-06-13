@@ -214,6 +214,7 @@ class PfPageparser
         }
         if($restart or empty($this->parsed)){
             $items=&$this->chunks;
+	$this->parsed=[];
         } else {
             $items=&$this->parsed;
         }
