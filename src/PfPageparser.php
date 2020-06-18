@@ -40,6 +40,12 @@ class PfPageparser
      * LOADING THE CONTENT FROM A URL/FILE/STRING
      */
 
+    private function initialize(){
+        $this->content="";
+        $this->chunks=[];
+        $this->parsed=[];
+    }
+
     /**
      * @param string $url
      * @param array $options
@@ -48,6 +54,7 @@ class PfPageparser
     public function load_from_url(string $url, array $options=[]): PfPageparser
     {
         // TODO: load with caching
+        $this->initialize();
         $options=array_merge($this->config,$options);
         $client = new Client([
             'headers'   =>  $options['headers'],
@@ -64,6 +71,7 @@ class PfPageparser
 
     public function load_from_file(string $filename): PfPageparser
     {
+        $this->initialize();
         if(file_exists($filename)){
             $this->content=file_get_contents($filename);
         }
@@ -72,6 +80,7 @@ class PfPageparser
 
     public function load_fom_string(string $string): PfPageparser
     {
+        $this->initialize();
         $this->content=$string;
         return $this;
     }
@@ -167,7 +176,11 @@ class PfPageparser
         $matches=false;
 
         if(empty($this->chunks)){
-            return $this;
+            if($this->content){
+                $this->chunks=[$this->content];
+            } else {
+                return $this;
+            }
         }
         foreach($this->chunks as $id => $chunk){
             //
@@ -210,7 +223,11 @@ class PfPageparser
     public function parse_fom_chunks(string $pattern,bool $only_one=false, bool $restart=false): PfPageparser
     {
         if(empty($this->chunks)){
-            return $this;
+            if($this->content){
+                $this->chunks=[$this->content];
+            } else {
+                return $this;
+            }
         }
         if($restart or empty($this->parsed)){
             $items=&$this->chunks;
