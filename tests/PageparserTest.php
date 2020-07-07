@@ -19,6 +19,7 @@ class PageparserTest extends TestCase
         $this->assertEquals(3600,$cf["cacheTtl"],"CacheTime should have default value 3600");
         $this->assertEquals(1,$cf["TestValue"],"TestValue should have value 1");
     }
+
     public function test_input_from_string(){
         $pp=New PfPageparser();
         $pp->load_fom_string('one,two,three')
@@ -28,8 +29,20 @@ class PageparserTest extends TestCase
 
     public function test_input_from_file(){
         $pp=New PfPageparser();
+        $string=$pp->load_from_file("tests/content/input1.html")
+            ->trim("<body","</body")
+            ->raw();
+        $this->assertTrue(strpos($string,"2018")>0,"Get raw contents");
+
         $pp->load_from_file("tests/content/input1.html")
             ->trim("<body","</body")
+            ->split_chunks("</tr>")
+            ->filter_chunks(["$"]);
+        $this->assertEquals(count($pp->get_chunks()),3);
+
+        $pp->load_from_file("tests/content/input1.html")
+            ->trim("<body","</body")
+            ->cleanup_html()
             ->split_chunks("</tr>")
             ->filter_chunks(["$"]);
         $this->assertEquals(count($pp->get_chunks()),3);

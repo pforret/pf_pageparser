@@ -85,26 +85,21 @@ class PfPageparser
         return $this;
     }
 
+    public function cleanup_html($remove_linefeeds=true,$shrink_spaces=true ): PfPageparser
+    {
+        if($remove_linefeeds)   $this->content=preg_replace("|\n+|"," ",$this->content); // remove line feeds
+        if($shrink_spaces)      $this->content=preg_replace("|\s\s+|"," ",$this->content); // remove multiple spaces
+        return $this;
+    }
+
     /* ------------------------------------------
-    * GET RAW CONTENT BACK
+    * GET THE RAW CONTENT
     */
-
-    /**
-     * @return string
-     */
     public function get_content():string
-    {
-        // for backward compatibility
-        return $this->raw();
-    }
+        {   return $this->content;      /* for backward compatibility */ }
 
-    /**
-     * @return string
-     */
     public function raw(): string
-    {
-        return $this->content;
-    }
+        {    return $this->content; }
 
     /* ------------------------------------------
     * MODIFY THE RAW CONTENT
