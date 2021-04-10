@@ -14,16 +14,16 @@ class InstagramTest extends TestCase
         $pp=New PfPageparser();
 
         $pp->load_from_url($url);
-        $this->assertContains('window._sharedData',$pp->get_content(),"Data found in Instagram HTML");
+        self::assertTrue(strpos($pp->get_content(),'window._sharedData',0) > 0,"Data found in Instagram HTML");
 
         $pp->trim('window._sharedData','<script type="text/javascript"');
-        $this->assertNotEmpty($pp->get_content(),'HTML retrieved and trimmed');
+        self::assertNotEmpty($pp->get_content(),'HTML retrieved and trimmed');
 
         $pp->parse_fom_chunks('/"edge_followed_by":{"count":(\d+)}/',true);
-        $this->assertGreaterThan(0,count($pp->results()),"Found follower count");
+        self::assertGreaterThan(0,count($pp->results()),"Found follower count");
 
         $pp->parse_fom_chunks('/"display_url":"([^"]*)"/',true,true);
-        $this->assertGreaterThan(0,count($pp->results()),"Found image list");
+        self::assertGreaterThan(0,count($pp->results()),"Found image list");
 
     }
 
