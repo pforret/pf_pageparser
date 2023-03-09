@@ -6,18 +6,18 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 
-class PfPageparser
+final class PfPageparser
 {
     // Build your next great package.
-    private $config;
+    private array $config;
 
-    private $content = '';
+    private string $content = '';
 
-    private $chunks = [];
+    private array $chunks = [];
 
-    private $parsed = [];
+    private array $parsed = [];
 
-    private $logger;
+    private LoggerInterface $logger;
 
     public function __construct(array $config = [], LoggerInterface $logger = null)
     {
@@ -42,10 +42,6 @@ class PfPageparser
         return $this->config;
     }
 
-    /* ------------------------------------------
-     * LOADING THE CONTENT FROM A URL/FILE/STRING
-     */
-
     private function initialize(): void
     {
         $this->content = '';
@@ -58,7 +54,6 @@ class PfPageparser
      */
     public function load_from_url(string $url, array $options = []): PfPageparser
     {
-        // TODO: load with caching
         $this->initialize();
         $options = array_merge($this->config, $options);
         $client = new Client([
@@ -75,6 +70,9 @@ class PfPageparser
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function load_from_file(string $filename): PfPageparser
     {
         $this->initialize();
@@ -85,6 +83,9 @@ class PfPageparser
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function load_fom_string(string $string): PfPageparser
     {
         $this->initialize();
@@ -93,7 +94,10 @@ class PfPageparser
         return $this;
     }
 
-    public function cleanup_html($remove_linefeeds = true, $shrink_spaces = true): PfPageparser
+    /**
+     * @return $this
+     */
+    public function cleanup_html(bool $remove_linefeeds = true, bool $shrink_spaces = true): PfPageparser
     {
         if ($remove_linefeeds) {
             $this->content = preg_replace("|\n+|", ' ', $this->content);
@@ -108,6 +112,7 @@ class PfPageparser
     /* ------------------------------------------
     * GET THE RAW CONTENT
     */
+
     public function get_content(): string
     {
         return $this->content;      /* for backward compatibility */
@@ -122,6 +127,9 @@ class PfPageparser
     * MODIFY THE RAW CONTENT
     */
 
+    /**
+     * @return $this
+     */
     public function trim_before(string $pattern, bool $is_regex = false): PfPageparser
     {
         $found = $is_regex ? preg_match($pattern, $this->content, $matches) : strpos($this->content, $pattern);
@@ -132,6 +140,9 @@ class PfPageparser
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function trim_after(string $pattern, bool $is_regex = false): PfPageparser
     {
         $found = $is_regex ? preg_match($pattern, $this->content, $matches) : strpos($this->content, $pattern);
@@ -142,6 +153,9 @@ class PfPageparser
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function trim(string $before = '<body', string $after = '</body', bool $is_regex = false): PfPageparser
     {
         $this->trim_before($before, $is_regex);
@@ -156,7 +170,6 @@ class PfPageparser
 
     /**
      * @return $this
-     * split the HTML content into chunks based on a text or regex separator
      */
     public function split_chunks(string $pattern, bool $is_regex = false): PfPageparser
     {
@@ -228,6 +241,9 @@ class PfPageparser
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function parse_fom_chunks(string $pattern, bool $only_one = false, bool $restart = false): PfPageparser
     {
         if (empty($this->chunks)) {
@@ -277,7 +293,7 @@ class PfPageparser
 
     private function log(string $text, string $level = 'info'): void
     {
-        if ($this->logger) {
+        if (isset($this->logger)) {
             $this->logger->log($level, $text);
         }
     }
